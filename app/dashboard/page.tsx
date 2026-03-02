@@ -58,7 +58,7 @@ function DashboardInner({
     {
       title: "Community",
       description: "Stelle Fragen, teile Fortschritte und bleib motiviert.",
-      href: "/community",
+      href: "/dashboard/community",
     },
     {
       title: "Mein Profil",

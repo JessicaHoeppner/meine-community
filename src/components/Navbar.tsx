@@ -63,7 +63,7 @@ export default function Navbar() {
       <a href="/dashboard/kurse" style={commonLinkStyle}>
         Kurse
       </a>
-      <a href="/dashboard/mitglieder" style={commonLinkStyle}>
+      <a href="/dashboard/community" style={commonLinkStyle}>
         Community
       </a>
     </div>
