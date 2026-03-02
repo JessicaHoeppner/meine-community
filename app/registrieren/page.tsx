@@ -34,7 +34,7 @@ export default function RegistrierenPage() {
       password,
       options: {
         data: {
-          name,
+          name: name,
         },
       },
     });
@@ -45,9 +45,7 @@ export default function RegistrierenPage() {
       return;
     }
 
-    setSuccess(
-      "Registrierung erfolgreich. Bitte pruefe dein Postfach zur Bestaetigung."
-    );
+    setSuccess("Registrierung erfolgreich! Bitte pruefe deine E-Mails.");
     setName("");
     setEmail("");
     setPassword("");
