@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/src/lib/supabase";
 
 export default function Navbar() {
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -19,7 +23,26 @@ export default function Navbar() {
     };
   }, []);
 
-  const commonLinkStyle: React.CSSProperties = {
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setIsAuthenticated(!!data.user);
+    };
+
+    checkUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      checkUser();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const commonLinkStyle: CSSProperties = {
     cursor: "pointer",
     color: "#2E2E2E",
     textDecoration: "none",
@@ -46,7 +69,38 @@ export default function Navbar() {
     </div>
   );
 
-  const authButtons = (
+  const authButtons = isAuthenticated ? (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+      }}
+    >
+      <a href="/dashboard" style={commonLinkStyle}>
+        Dashboard
+      </a>
+      <button
+        type="button"
+        onClick={async () => {
+          await supabase.auth.signOut();
+          router.push("/login");
+        }}
+        style={{
+          cursor: "pointer",
+          padding: "8px 16px",
+          borderRadius: "999px",
+          border: "1px solid #E8E4E0",
+          backgroundColor: "#FFFFFF",
+          color: "#2E2E2E",
+          fontSize: "0.95rem",
+          fontWeight: 500,
+        }}
+      >
+        Abmelden
+      </button>
+    </div>
+  ) : (
     <div
       style={{
         display: "flex",
