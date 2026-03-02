@@ -53,7 +53,7 @@ function DashboardInner({
     {
       title: "Meine Kurse",
       description: "Starte neue Kurse oder mache dort weiter, wo du aufgehoert hast.",
-      href: "/kurse",
+      href: "/dashboard/kurse",
     },
     {
       title: "Community",

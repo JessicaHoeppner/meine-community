@@ -60,10 +60,10 @@ export default function Navbar() {
       <a href="/" style={commonLinkStyle}>
         Startseite
       </a>
-      <a href="/kurse" style={commonLinkStyle}>
+      <a href="/dashboard/kurse" style={commonLinkStyle}>
         Kurse
       </a>
-      <a href="/community" style={commonLinkStyle}>
+      <a href="/dashboard/mitglieder" style={commonLinkStyle}>
         Community
       </a>
     </div>
