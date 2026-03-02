@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "../src/components/Navbar";
+import Footer from "../src/components/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,7 +20,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <body
+        className={`${inter.className} antialiased`}
+        style={{
+          margin: 0,
+          padding: 0,
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Navbar />
+        <main
+          style={{
+            flex: 1,
+          }}
+        >
+          {children}
+        </main>
+        <Footer />
+      </body>
     </html>
   );
 }
