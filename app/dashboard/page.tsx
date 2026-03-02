@@ -63,7 +63,12 @@ function DashboardInner({
     {
       title: "Mein Profil",
       description: "Verwalte deine Daten und Einstellungen.",
-      href: "/profil",
+      href: "/dashboard/profil",
+    },
+    {
+      title: "Mitglieder",
+      description: "Finde andere Mitglieder und entdecke ihre Profile.",
+      href: "/dashboard/mitglieder",
     },
   ];
 
