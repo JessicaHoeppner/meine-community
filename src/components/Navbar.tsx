@@ -66,6 +66,9 @@ export default function Navbar() {
       <a href="/dashboard/community" style={commonLinkStyle}>
         Community
       </a>
+      <a href="/preise" style={commonLinkStyle}>
+        Preise
+      </a>
     </div>
   );
 
