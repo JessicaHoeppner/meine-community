@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!resend) {
+      return NextResponse.json({ success: true });
+    }
+
     const { data, error } = await resend.emails.send({
       from: FROM,
       to: [to],

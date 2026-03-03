@@ -2,10 +2,4 @@ import { Resend } from "resend";
 
 const apiKey = process.env.RESEND_API_KEY;
 
-if (!apiKey) {
-  throw new Error(
-    "RESEND_API_KEY fehlt. Bitte in .env.local setzen."
-  );
-}
-
-export const resend = new Resend(apiKey);
+export const resend: Resend | null = apiKey ? new Resend(apiKey) : null;
