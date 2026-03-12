@@ -3,15 +3,24 @@ export default function Footer() {
     <footer
       style={{
         marginTop: "auto",
-        padding: "24px 16px",
+        padding: "40px 32px",
         textAlign: "center",
-        backgroundColor: "#FAF7F3",
-        color: "#6B6562",
-        fontSize: "0.9rem",
+        backgroundColor: "#efe6dc",
+        borderTop: "1px solid rgba(60,44,36,0.07)",
       }}
     >
-      2026 Meine Community. Alle Rechte vorbehalten.
+      <p
+        style={{
+          margin: 0,
+          fontFamily: "'Manrope', system-ui, sans-serif",
+          fontSize: "14px",
+          fontWeight: 400,
+          letterSpacing: "0.02em",
+          color: "#9b8f87",
+        }}
+      >
+        © 2026 Meine Community. Alle Rechte vorbehalten.
+      </p>
     </footer>
   );
 }
-

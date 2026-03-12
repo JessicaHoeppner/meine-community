@@ -170,149 +170,236 @@ function CommunityPostInner() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#F5F2EE",
-        padding: "40px 16px",
-      }}
-    >
-      <main style={{ maxWidth: "960px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "14px" }}>
-          <Link
-            href="/dashboard/community"
-            style={{
-              color: "#8B3A3A",
-              textDecoration: "none",
-              fontWeight: 500,
-              fontSize: "0.95rem",
-            }}
-          >
-            ← Zurueck zum Feed
-          </Link>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@400;500;600&display=swap');
+
+        .comment-textarea:focus {
+          outline: none;
+          border-color: #c9896e !important;
+          box-shadow: 0 0 0 3px rgba(180,59,50,0.05) !important;
+        }
+        .submit-btn:hover:not(:disabled) { background-color: #9f3129 !important; }
+        .back-link:hover { color: #9f3129 !important; }
+        .comment-card:hover { border-color: rgba(180,59,50,0.30) !important; }
+
+        .auth-grain::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.016;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          background-size: 256px 256px;
+        }
+      `}} />
+
+      <div
+        className="auth-grain"
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#efe6dc",
+          position: "relative",
+          overflow: "hidden",
+          fontFamily: "'Manrope', system-ui, sans-serif",
+        }}
+      >
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }} aria-hidden>
+          <svg style={{ position: "absolute", top: "-15%", left: "-10%", width: "55%", height: "70%", opacity: 0.38 }}
+            viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="250" cy="200" rx="250" ry="180" fill="#e8ddd0"/>
+          </svg>
+          <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "38%", opacity: 0.40 }}
+            viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#e8ddd0" d="M0,60 C360,140 720,20 1080,80 C1260,110 1380,60 1440,70 L1440,160 L0,160 Z"/>
+          </svg>
+          <svg style={{ position: "absolute", top: "5%", right: "-8%", width: "38%", height: "55%", opacity: 0.22 }}
+            viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="200" cy="175" rx="200" ry="155" fill="#ddd4c8"/>
+          </svg>
         </div>
 
-        {loading ? (
-          <div style={{ color: "#6B6562", fontSize: "0.95rem" }}>Laden...</div>
-        ) : error ? (
-          <div
-            style={{
-              padding: "10px 12px",
-              borderRadius: "8px",
-              backgroundColor: "#FEE2E2",
-              color: "#B91C1C",
-              fontSize: "0.9rem",
-            }}
-          >
-            {error}
+        <main style={{ position: "relative", zIndex: 1, maxWidth: "880px", margin: "0 auto", padding: "80px 24px 100px" }}>
+
+          {/* Zurück */}
+          <div style={{ marginBottom: "32px" }}>
+            <Link href="/dashboard/community" className="back-link" style={{
+              fontFamily: "'Manrope', system-ui, sans-serif",
+              color: "#b43b32",
+              textDecoration: "none",
+              fontWeight: 500,
+              fontSize: "14px",
+              letterSpacing: "0.02em",
+              transition: "color 0.2s ease",
+            }}>
+              ← Zurück zum Feed
+            </Link>
           </div>
-        ) : !post ? (
-          <div style={{ color: "#6B6562", fontSize: "0.95rem" }}>Beitrag nicht gefunden.</div>
-        ) : (
-          <>
-            <div
-              style={{
-                backgroundColor: "#FFFFFF",
-                border: "1px solid #E8E4E0",
-                borderRadius: "16px",
-                padding: "22px",
-                marginBottom: "12px",
-              }}
-            >
-              <div style={{ color: "#6B6562", fontSize: "0.9rem", marginBottom: "8px" }}>
-                {author?.name ?? "Unbekannt"} · {dateLabel}
-              </div>
-              <h1 style={{ margin: 0, color: "#2E2E2E", fontSize: "2rem", fontWeight: 800 }}>
-                {post.titel ?? "Ohne Titel"}
-              </h1>
-              <div style={{ marginTop: "14px", color: "#6B6562", lineHeight: 1.7, fontSize: "1rem" }}>
-                {(post.inhalt ?? "").trim() || "Kein Inhalt."}
-              </div>
+
+          {loading ? (
+            <div style={{ color: "#7a6d65", fontSize: "15px" }}>Laden…</div>
+          ) : error ? (
+            <div style={{ padding: "13px 16px", borderRadius: "12px", backgroundColor: "#fce9e9", border: "1px solid rgba(180,59,50,0.12)", color: "#b43b32", fontSize: "14px" }}>
+              {error}
             </div>
+          ) : !post ? (
+            <div style={{ color: "#7a6d65", fontSize: "15px" }}>Beitrag nicht gefunden.</div>
+          ) : (
+            <>
+              {/* Post-Card */}
+              <div style={{
+                backgroundColor: "#fbf8f4",
+                border: "1px solid rgba(60,44,36,0.07)",
+                borderRadius: "28px",
+                padding: "40px 40px 36px",
+                boxShadow: "0 2px 24px rgba(60,44,36,0.06), 0 1px 3px rgba(60,44,36,0.03)",
+                marginBottom: "20px",
+              }}>
+                {/* Meta */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(60,44,36,0.08)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      fontStyle: "italic",
+                      fontSize: "16px",
+                      color: "#7a6d65",
+                      flexShrink: 0,
+                    }}>
+                      {(author?.name ?? "?").charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 500, color: "#3c2c24", fontSize: "14px" }}>
+                      {author?.name ?? "Unbekannt"}
+                    </span>
+                  </div>
+                  <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#b3a89e", fontSize: "12px", letterSpacing: "0.01em" }}>
+                    {dateLabel}
+                  </span>
+                </div>
 
-            <div
-              style={{
-                backgroundColor: "#FFFFFF",
-                border: "1px solid #E8E4E0",
-                borderRadius: "16px",
-                padding: "22px",
-              }}
-            >
-              <div style={{ fontWeight: 800, color: "#2E2E2E", fontSize: "1.1rem", marginBottom: "10px" }}>
-                Kommentare
+                {/* Titel */}
+                <h1 style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontSize: "38px",
+                  fontWeight: 300,
+                  lineHeight: 1.15,
+                  letterSpacing: "0.01em",
+                  color: "#3c2c24",
+                  margin: 0,
+                }}>
+                  <em style={{ fontStyle: "italic" }}>{post.titel ?? "Ohne Titel"}</em>
+                </h1>
+
+                <div style={{ width: "36px", height: "1px", backgroundColor: "#b43b32", margin: "18px 0 20px", opacity: 0.35 }} />
+
+                {/* Inhalt */}
+                <div style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#6f625b", lineHeight: 1.8, fontSize: "15px" }}>
+                  {(post.inhalt ?? "").trim() || "Kein Inhalt."}
+                </div>
               </div>
 
-              {commentError ? (
-                <div
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: "8px",
-                    backgroundColor: "#FEE2E2",
-                    color: "#B91C1C",
-                    fontSize: "0.9rem",
-                    marginBottom: "12px",
-                  }}
-                >
-                  {commentError}
-                </div>
-              ) : null}
+              {/* Kommentare-Card */}
+              <div style={{
+                backgroundColor: "#fbf8f4",
+                border: "1px solid rgba(60,44,36,0.07)",
+                borderRadius: "28px",
+                padding: "36px 40px 32px",
+                boxShadow: "0 2px 24px rgba(60,44,36,0.06), 0 1px 3px rgba(60,44,36,0.03)",
+              }}>
+                <h2 style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontSize: "26px",
+                  fontWeight: 300,
+                  letterSpacing: "0.01em",
+                  color: "#3c2c24",
+                  margin: "0 0 24px",
+                }}>
+                  <em style={{ fontStyle: "italic" }}>Kommentare</em>
+                </h2>
 
-              <form onSubmit={handleSendComment} style={{ marginBottom: "14px" }}>
-                <textarea
-                  value={commentText}
-                  onChange={(ev) => setCommentText(ev.target.value)}
-                  rows={3}
-                  placeholder="Schreibe einen Kommentar..."
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #E8E4E0",
-                    fontSize: "0.95rem",
-                    backgroundColor: "#FFFFFF",
-                    resize: "vertical",
-                    marginBottom: "10px",
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={sending}
-                  style={{
-                    padding: "10px 16px",
-                    borderRadius: "999px",
-                    border: "none",
-                    backgroundColor: "#8B3A3A",
-                    color: "#FFFFFF",
-                    fontWeight: 500,
-                    fontSize: "0.95rem",
-                    cursor: sending ? "default" : "pointer",
-                    opacity: sending ? 0.85 : 1,
-                  }}
-                >
-                  {sending ? "Sende..." : "Kommentar senden"}
-                </button>
-              </form>
+                {commentError ? (
+                  <div style={{ padding: "13px 16px", borderRadius: "12px", backgroundColor: "#fce9e9", border: "1px solid rgba(180,59,50,0.12)", color: "#b43b32", fontSize: "14px", marginBottom: "16px" }}>
+                    {commentError}
+                  </div>
+                ) : null}
 
-              {comments.length === 0 ? (
-                <div style={{ color: "#6B6562", fontSize: "0.95rem" }}>
-                  Noch keine Kommentare.
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {comments.map((c) => (
-                    <CommentCard
-                      key={c.id}
-                      comment={c}
-                      authorName={commentAuthors[c.autor_id]?.name ?? "Unbekannt"}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+                {/* Kommentar-Formular */}
+                <form onSubmit={handleSendComment} style={{ marginBottom: "28px" }}>
+                  <textarea
+                    value={commentText}
+                    onChange={(ev) => setCommentText(ev.target.value)}
+                    rows={3}
+                    placeholder="Schreibe einen Kommentar…"
+                    className="comment-textarea"
+                    style={{
+                      width: "100%",
+                      padding: "15px 18px",
+                      borderRadius: "14px",
+                      border: "1px solid #ddd5c6",
+                      fontSize: "15px",
+                      fontFamily: "'Manrope', system-ui, sans-serif",
+                      backgroundColor: "#f7f1e8",
+                      color: "#3c2c24",
+                      resize: "vertical",
+                      marginBottom: "12px",
+                      boxSizing: "border-box",
+                      transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                      lineHeight: 1.65,
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={sending}
+                    className="submit-btn"
+                    style={{
+                      padding: "13px 28px",
+                      borderRadius: "50px",
+                      border: "none",
+                      backgroundColor: "#b43b32",
+                      color: "#ffffff",
+                      fontFamily: "'Manrope', system-ui, sans-serif",
+                      fontWeight: 500,
+                      fontSize: "14px",
+                      letterSpacing: "0.04em",
+                      cursor: sending ? "default" : "pointer",
+                      opacity: sending ? 0.72 : 1,
+                      transition: "background-color 0.2s ease",
+                    }}
+                  >
+                    {sending ? "Sende…" : "Kommentar senden"}
+                  </button>
+                </form>
+
+                {/* Trennlinie */}
+                <div style={{ height: "1px", backgroundColor: "rgba(60,44,36,0.06)", marginBottom: "20px" }} />
+
+                {/* Kommentar-Liste */}
+                {comments.length === 0 ? (
+                  <div style={{ color: "#9b8f87", fontSize: "14px" }}>Noch keine Kommentare.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {comments.map((c) => (
+                      <CommentCard
+                        key={c.id}
+                        comment={c}
+                        authorName={commentAuthors[c.autor_id]?.name ?? "Unbekannt"}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </>
   );
 }
 
@@ -328,22 +415,38 @@ function CommentCard({
   }, [comment.erstellt_am]);
 
   return (
-    <div
-      style={{
-        backgroundColor: "#FAF7F3",
-        border: "1px solid #E8E4E0",
-        borderRadius: "12px",
-        padding: "14px",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
-        <div style={{ color: "#6B6562", fontSize: "0.9rem" }}>{authorName}</div>
-        <div style={{ color: "#6B6562", fontSize: "0.9rem" }}>{dateLabel}</div>
+    <div className="comment-card" style={{
+      backgroundColor: "#f7f2eb",
+      border: "1px solid rgba(60,44,36,0.06)",
+      borderRadius: "16px",
+      padding: "16px 20px",
+      transition: "border-color 0.2s ease",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{
+            width: "26px",
+            height: "26px",
+            borderRadius: "50%",
+            backgroundColor: "rgba(60,44,36,0.07)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontStyle: "italic",
+            fontSize: "13px",
+            color: "#7a6d65",
+            flexShrink: 0,
+          }}>
+            {authorName.charAt(0).toUpperCase()}
+          </div>
+          <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 500, color: "#3c2c24", fontSize: "13px" }}>{authorName}</span>
+        </div>
+        <div style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#b3a89e", fontSize: "12px" }}>{dateLabel}</div>
       </div>
-      <div style={{ marginTop: "8px", color: "#2E2E2E", lineHeight: 1.6, fontSize: "0.95rem" }}>
+      <div style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#6f625b", lineHeight: 1.65, fontSize: "14px" }}>
         {(comment.inhalt ?? "").trim() || "—"}
       </div>
     </div>
   );
 }
-
