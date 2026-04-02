@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Vorlagen & Bilder
+/alte WebApp/
+/Vorlage
+/stitch (4)/
+/images/
+*.pen
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

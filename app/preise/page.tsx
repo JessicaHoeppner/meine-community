@@ -13,21 +13,21 @@ const PLANS = [
     id: "monatlich",
     name: "Monatlich",
     price: "29",
-    period: "Euro / Monat",
+    period: "/ Monat",
     popular: false,
   },
   {
     id: "jaehrlich",
     name: "Jährlich",
     price: "249",
-    period: "Euro / Jahr",
+    period: "/ Jahr",
     popular: true,
   },
   {
     id: "einmalig",
     name: "Einmalig",
     price: "199",
-    period: "Euro einmalig",
+    period: "einmalig",
     popular: false,
   },
 ] as const;
@@ -59,7 +59,7 @@ export default function PreisePage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000&family=Manrope:wght@400;500;600&display=swap');
 
         .price-card:hover {
           border-color: rgba(180,59,50,0.35) !important;
@@ -191,7 +191,7 @@ export default function PreisePage() {
                   position: "relative",
                   backgroundColor: "#fbf8f4",
                   border: plan.popular
-                    ? "1px solid rgba(180,59,50,0.25)"
+                    ? "3px solid #b43b32"
                     : "1px solid rgba(60,44,36,0.07)",
                   borderRadius: "28px",
                   padding: "40px 32px 32px",
@@ -200,23 +200,22 @@ export default function PreisePage() {
                     ? "0 4px 32px rgba(60,44,36,0.10), 0 1px 4px rgba(60,44,36,0.05)"
                     : "0 2px 24px rgba(60,44,36,0.06), 0 1px 3px rgba(60,44,36,0.03)",
                   transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                  transform: plan.popular ? "scale(1.05)" : undefined,
                 }}
               >
                 {/* Popular badge */}
                 {plan.popular && (
                   <div style={{
                     position: "absolute",
-                    top: "-13px",
+                    top: "-14px",
                     left: "50%",
                     transform: "translateX(-50%)",
                     backgroundColor: "#b43b32",
                     color: "#ffffff",
-                    fontFamily: "'Manrope', system-ui, sans-serif",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    padding: "5px 16px",
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    padding: "4px 16px",
                     borderRadius: "50px",
                     whiteSpace: "nowrap",
                   }}>
@@ -232,16 +231,16 @@ export default function PreisePage() {
                   letterSpacing: "0.10em",
                   textTransform: "uppercase",
                   color: "#9b8f87",
-                  marginBottom: "16px",
+                  marginBottom: "4px",
                 }}>
                   {plan.name}
                 </div>
 
-                {/* Price */}
-                <div style={{ marginBottom: "8px" }}>
+                {/* Preis: Zahl 48px + € 20px auf gleicher Baseline, darunter Periodentext */}
+                <div style={{ marginBottom: "4px" }}>
                   <span style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: "52px",
+                    fontSize: "48px",
                     fontWeight: 300,
                     color: "#3c2c24",
                     lineHeight: 1,
@@ -249,11 +248,20 @@ export default function PreisePage() {
                   }}>
                     {plan.price}
                   </span>
+                  <span style={{
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontSize: "20px",
+                    fontWeight: 300,
+                    color: "#3c2c24",
+                    verticalAlign: "baseline",
+                  }}>
+                    {" €"}
+                  </span>
                 </div>
                 <div style={{
                   fontFamily: "'Manrope', system-ui, sans-serif",
-                  fontSize: "13px",
-                  color: "#b3a89e",
+                  fontSize: "14px",
+                  color: "#6f625b",
                   marginBottom: "28px",
                   letterSpacing: "0.01em",
                 }}>

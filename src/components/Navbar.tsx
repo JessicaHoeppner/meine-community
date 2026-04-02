@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/src/lib/supabase";
 
@@ -10,8 +10,10 @@ type SearchPost = { id: string; titel: string | null };
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +33,15 @@ export default function Navbar() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Scroll-Schatten auf Header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -65,7 +76,7 @@ export default function Navbar() {
       return;
     }
     setSearching(true);
-    const pattern = `%${term}%`;
+    const pattern = `${term}%`;
     const [coursesRes, postsRes] = await Promise.all([
       supabase
         .from("courses")
@@ -117,22 +128,30 @@ export default function Navbar() {
   }, []);
 
   // ── Styles ──────────────────────────────────────────────
-  const navLinkStyle: CSSProperties = {
-    cursor: "pointer",
-    color: "#6f625b",
-    textDecoration: "none",
-    fontSize: "15px",
-    fontFamily: "'Manrope', system-ui, sans-serif",
-    fontWeight: 400,
-    transition: "color 0.2s ease",
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
   };
+
+  const getNavLinkStyle = (href: string): CSSProperties => ({
+    cursor: "pointer",
+    color: isActive(href) ? "var(--color-text)" : "var(--color-text-secondary)",
+    textDecoration: "none",
+    fontSize: "var(--text-nav)",
+    fontFamily: "var(--font-body)",
+    fontWeight: isActive(href) ? 500 : 400,
+    transition: "color 0.2s ease",
+    position: "relative",
+    paddingBottom: "4px",
+    borderBottom: isActive(href) ? "2px solid var(--color-primary)" : "2px solid transparent",
+  });
 
   const authLinkStyle: CSSProperties = {
     cursor: "pointer",
-    color: "#6f625b",
+    color: "var(--color-text-secondary)",
     textDecoration: "none",
-    fontSize: "15px",
-    fontFamily: "'Manrope', system-ui, sans-serif",
+    fontSize: "var(--text-nav)",
+    fontFamily: "var(--font-body)",
     fontWeight: 400,
     transition: "color 0.2s ease",
   };
@@ -140,10 +159,13 @@ export default function Navbar() {
   // ── Nav items ────────────────────────────────────────────
   const navItems = (
     <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-      <a href="/"                      className="nav-link" style={navLinkStyle}>Startseite</a>
-      <a href="/dashboard/kurse"       className="nav-link" style={navLinkStyle}>Kurse</a>
-      <a href="/dashboard/community"   className="nav-link" style={navLinkStyle}>Community</a>
-      <a href="/preise"                className="nav-link" style={navLinkStyle}>Preise</a>
+      <a href="/"                      className="nav-link" style={getNavLinkStyle("/")}>Startseite</a>
+      <a href="/dashboard/kurse"       className="nav-link" style={getNavLinkStyle("/dashboard/kurse")}>Kurse</a>
+      <a href="/dashboard/community"   className="nav-link" style={getNavLinkStyle("/dashboard/community")}>Community</a>
+      {isAuthenticated && (
+        <a href="/dashboard/live" className="nav-link" style={getNavLinkStyle("/dashboard/live")}>Live</a>
+      )}
+      <a href="/preise"                className="nav-link" style={getNavLinkStyle("/preise")}>Preise</a>
     </div>
   );
 
@@ -166,12 +188,12 @@ export default function Navbar() {
         style={{
           cursor: "pointer",
           padding: "8px 20px",
-          borderRadius: "50px",
-          border: "1px solid rgba(60,44,36,0.20)",
+          borderRadius: "var(--radius-pill)",
+          border: "1px solid var(--color-border-strong)",
           backgroundColor: "transparent",
-          color: "#6f625b",
-          fontSize: "15px",
-          fontFamily: "'Manrope', system-ui, sans-serif",
+          color: "var(--color-text-secondary)",
+          fontSize: "var(--text-nav)",
+          fontFamily: "var(--font-body)",
           fontWeight: 400,
           transition: "border-color 0.2s ease, color 0.2s ease",
         }}
@@ -188,12 +210,12 @@ export default function Navbar() {
         style={{
           cursor: "pointer",
           padding: "8px 20px",
-          borderRadius: "50px",
-          backgroundColor: "#b43b32",
+          borderRadius: "var(--radius-pill)",
+          backgroundColor: "var(--color-primary)",
           color: "#ffffff",
           textDecoration: "none",
-          fontSize: "15px",
-          fontFamily: "'Manrope', system-ui, sans-serif",
+          fontSize: "var(--text-nav)",
+          fontFamily: "var(--font-body)",
           fontWeight: 500,
           transition: "background-color 0.2s ease",
         }}
@@ -209,23 +231,15 @@ export default function Navbar() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@400;500;600&display=swap');
-
-        .nav-link:hover           { color: #3c2c24 !important; }
-        .nav-register:hover       { background-color: #9f3129 !important; }
-        .nav-signout:hover        { border-color: rgba(60,44,36,0.40) !important; color: #3c2c24 !important; }
-        .search-result-link:hover { background-color: #f7f2ec !important; }
-        .nav-search-btn:hover     { color: #3c2c24 !important; }
-      `}} />
-
       <header
         style={{
           position: "sticky",
           top: 0,
           zIndex: 50,
-          backgroundColor: "#faf7f2",
-          borderBottom: "1px solid rgba(60,44,36,0.08)",
+          backgroundColor: "var(--bg-primary)",
+          borderBottom: "1px solid var(--color-border)",
+          boxShadow: scrolled ? "var(--shadow-nav)" : "none",
+          transition: "box-shadow 0.2s ease",
         }}
       >
         {/* ── Desktop ── */}
@@ -245,12 +259,12 @@ export default function Navbar() {
             <div style={{ justifySelf: "start" }}>
               <div
                 style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontFamily: "var(--font-display)",
                   fontStyle: "italic",
                   fontWeight: 300,
                   fontSize: "1.3rem",
                   letterSpacing: "0.03em",
-                  color: "#3c2c24",
+                  color: "var(--color-text)",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -267,10 +281,13 @@ export default function Navbar() {
                 gap: "32px",
               }}
             >
-              <a href="/"                    className="nav-link" style={navLinkStyle}>Startseite</a>
-              <a href="/dashboard/kurse"     className="nav-link" style={navLinkStyle}>Kurse</a>
-              <a href="/dashboard/community" className="nav-link" style={navLinkStyle}>Community</a>
-              <a href="/preise"              className="nav-link" style={navLinkStyle}>Preise</a>
+              <a href="/"                    className="nav-link" style={getNavLinkStyle("/")}>Startseite</a>
+              <a href="/dashboard/kurse"     className="nav-link" style={getNavLinkStyle("/dashboard/kurse")}>Kurse</a>
+              <a href="/dashboard/community" className="nav-link" style={getNavLinkStyle("/dashboard/community")}>Community</a>
+              {isAuthenticated && (
+                <a href="/dashboard/live" className="nav-link" style={getNavLinkStyle("/dashboard/live")}>Live</a>
+              )}
+              <a href="/preise"              className="nav-link" style={getNavLinkStyle("/preise")}>Preise</a>
             </div>
 
             {/* Zone Rechts: Suche + Auth */}
@@ -301,7 +318,7 @@ export default function Navbar() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#6f625b",
+                    color: "var(--color-text-secondary)",
                     transition: "color 0.2s ease",
                     flexShrink: 0,
                   }}
@@ -332,9 +349,9 @@ export default function Navbar() {
                       borderRadius: "50px",
                       border: "1px solid #E8E4E0",
                       fontSize: "14px",
-                      fontFamily: "'Manrope', system-ui, sans-serif",
-                      backgroundColor: "#fbf8f5",
-                      color: "#3c2c24",
+                      fontFamily: "var(--font-body)",
+                      backgroundColor: "var(--bg-proof)",
+                      color: "var(--color-text)",
                       outline: "none",
                       display: "block",
                     }}
@@ -349,7 +366,7 @@ export default function Navbar() {
                       marginTop: "6px",
                       minWidth: "260px",
                       maxWidth: "320px",
-                      backgroundColor: "#fbf8f5",
+                      backgroundColor: "var(--bg-proof)",
                       border: "1px solid rgba(60,44,36,0.10)",
                       borderRadius: "16px",
                       boxShadow: "0 8px 32px rgba(60,44,36,0.10)",
@@ -358,18 +375,18 @@ export default function Navbar() {
                     }}
                   >
                     {searching ? (
-                      <div style={{ padding: "12px 16px", color: "#9b8f87", fontSize: "14px", fontFamily: "'Manrope', system-ui, sans-serif" }}>
+                      <div style={{ padding: "12px 16px", color: "var(--color-text-muted)", fontSize: "14px", fontFamily: "var(--font-body)" }}>
                         Suchen…
                       </div>
                     ) : !hasResults ? (
-                      <div style={{ padding: "12px 16px", color: "#9b8f87", fontSize: "14px", fontFamily: "'Manrope', system-ui, sans-serif" }}>
+                      <div style={{ padding: "12px 16px", color: "var(--color-text-muted)", fontSize: "14px", fontFamily: "var(--font-body)" }}>
                         Keine Treffer
                       </div>
                     ) : (
                       <>
                         {searchResults.courses.length > 0 && (
                           <div style={{ padding: "8px 0" }}>
-                            <div style={{ padding: "6px 16px", fontSize: "11px", letterSpacing: "0.10em", textTransform: "uppercase", color: "#9b8f87", fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 600 }}>
+                            <div style={{ padding: "6px 16px", fontSize: "11px", letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--color-text-muted)", fontFamily: "var(--font-body)", fontWeight: 600 }}>
                               Kurse
                             </div>
                             {searchResults.courses.map((c) => (
@@ -382,8 +399,8 @@ export default function Navbar() {
                                   display: "block",
                                   padding: "9px 16px",
                                   fontSize: "14px",
-                                  fontFamily: "'Manrope', system-ui, sans-serif",
-                                  color: "#3c2c24",
+                                  fontFamily: "var(--font-body)",
+                                  color: "var(--color-text)",
                                   textDecoration: "none",
                                   transition: "background-color 0.15s ease",
                                 }}
@@ -395,7 +412,7 @@ export default function Navbar() {
                         )}
                         {searchResults.posts.length > 0 && (
                           <div style={{ padding: "8px 0", borderTop: "1px solid rgba(60,44,36,0.07)" }}>
-                            <div style={{ padding: "6px 16px", fontSize: "11px", letterSpacing: "0.10em", textTransform: "uppercase", color: "#9b8f87", fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 600 }}>
+                            <div style={{ padding: "6px 16px", fontSize: "11px", letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--color-text-muted)", fontFamily: "var(--font-body)", fontWeight: 600 }}>
                               Beiträge
                             </div>
                             {searchResults.posts.map((p) => (
@@ -408,8 +425,8 @@ export default function Navbar() {
                                   display: "block",
                                   padding: "9px 16px",
                                   fontSize: "14px",
-                                  fontFamily: "'Manrope', system-ui, sans-serif",
-                                  color: "#3c2c24",
+                                  fontFamily: "var(--font-body)",
+                                  color: "var(--color-text)",
                                   textDecoration: "none",
                                   transition: "background-color 0.15s ease",
                                 }}
@@ -444,12 +461,12 @@ export default function Navbar() {
           >
             <div
               style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontFamily: "var(--font-display)",
                 fontStyle: "italic",
                 fontWeight: 300,
                 fontSize: "1.2rem",
                 letterSpacing: "0.03em",
-                color: "#3c2c24",
+                color: "var(--color-text)",
               }}
             >
               Meine Community
@@ -473,7 +490,7 @@ export default function Navbar() {
             style={{
               padding: "12px 24px 20px",
               borderTop: "1px solid rgba(60,44,36,0.08)",
-              backgroundColor: "#faf7f2",
+              backgroundColor: "var(--bg-primary)",
             }}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "16px" }}>

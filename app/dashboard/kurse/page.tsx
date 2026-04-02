@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AuthGuard from "@/src/components/AuthGuard";
 import { supabase } from "@/src/lib/supabase";
+import { Alert, EmptyState } from "@/src/components/ui";
 
 type CourseRow = {
   id: string;
@@ -13,6 +14,14 @@ type CourseRow = {
   ersteller_id: string | null;
   veroeffentlicht: boolean | null;
   erstellt_am: string | null;
+};
+
+type InProgressKurs = {
+  kurs_id: string;
+  titel: string;
+  erledigt: number;
+  gesamt: number;
+  letzteAktivitaet: string;
 };
 
 export default function KursePage() {
@@ -28,6 +37,8 @@ function KurseInner() {
   const [error, setError] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseRow[]>([]);
   const [moduleCounts, setModuleCounts] = useState<Record<string, number>>({});
+  const [inProgressKurse, setInProgressKurse] = useState<InProgressKurs[]>([]);
+  const [erledigtProKurs, setErledigtProKurs] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -36,9 +47,7 @@ function KurseInner() {
 
       const { data: courseData, error: courseError } = await supabase
         .from("courses")
-        .select(
-          "id, titel, beschreibung, bild_url, ersteller_id, veroeffentlicht, erstellt_am"
-        )
+        .select("id, titel, beschreibung, bild_url, ersteller_id, veroeffentlicht, erstellt_am")
         .eq("veroeffentlicht", true)
         .order("erstellt_am", { ascending: false });
 
@@ -70,139 +79,179 @@ function KurseInner() {
       setLoading(false);
     };
 
+    const loadInProgress = async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
+      if (!user) return;
+
+      const { data: progressData, error: progressError } = await supabase
+        .from("module_progress")
+        .select("modul_id, erledigt_am")
+        .eq("nutzer_id", user.id)
+        .eq("erledigt", true);
+
+      if (progressError || !progressData || progressData.length === 0) return;
+
+      const erledigteModulIds = progressData.map((p) => String(p.modul_id));
+
+      const { data: moduleData, error: moduleError } = await supabase
+        .from("modules")
+        .select("id, kurs_id")
+        .in("id", erledigteModulIds);
+
+      if (moduleError || !moduleData || moduleData.length === 0) return;
+
+      const erledigtMap: Record<string, number> = {};
+      for (const m of moduleData) {
+        const k = String(m.kurs_id);
+        erledigtMap[k] = (erledigtMap[k] ?? 0) + 1;
+      }
+      setErledigtProKurs(erledigtMap);
+
+      const kursIds = [...new Set(moduleData.map((m) => String(m.kurs_id)))];
+
+      const { data: alleModule, error: alleModuleError } = await supabase
+        .from("modules")
+        .select("id, kurs_id")
+        .in("kurs_id", kursIds);
+
+      const { data: kurseData, error: kurseError } = await supabase
+        .from("kurse")
+        .select("id, titel")
+        .in("id", kursIds);
+
+      if (alleModuleError || kurseError || !kurseData || !alleModule) return;
+
+      const erledigungsDaten = new Map(
+        progressData.map((p) => [String(p.modul_id), p.erledigt_am])
+      );
+
+      const result: InProgressKurs[] = [];
+
+      for (const kurs of kurseData) {
+        const kursIdStr = String(kurs.id);
+        const alleModuleDesKurses = alleModule.filter((m) => String(m.kurs_id) === kursIdStr);
+        const gesamt = alleModuleDesKurses.length;
+        const erledigtIds = alleModuleDesKurses
+          .filter((m) => erledigteModulIds.includes(String(m.id)))
+          .map((m) => String(m.id));
+        const erledigt = erledigtIds.length;
+
+        if (erledigt === 0 || erledigt === gesamt) continue;
+
+        const letzteAktivitaet = erledigtIds
+          .map((id) => erledigungsDaten.get(id) ?? "")
+          .sort()
+          .reverse()[0] ?? "";
+
+        result.push({ kurs_id: kurs.id, titel: kurs.titel, erledigt, gesamt, letzteAktivitaet });
+      }
+
+      result.sort((a, b) => b.letzteAktivitaet.localeCompare(a.letzteAktivitaet));
+      setInProgressKurse(result.slice(0, 3));
+    };
+
     load();
+    loadInProgress();
   }, []);
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@400;500;600&display=swap');
-        .course-card:hover { border-color: rgba(180,59,50,0.35) !important; box-shadow: 0 8px 48px rgba(60,44,36,0.11), 0 1px 4px rgba(60,44,36,0.05) !important; }
-        .course-card:hover .course-card-title { color: #b43b32 !important; }
-        .course-card:hover .course-card-arrow { color: #b43b32 !important; opacity: 1 !important; }
-        .auth-grain::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          z-index: 0;
-          opacity: 0.016;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-size: 256px 256px;
-        }
-        @media (max-width: 640px) {
-          .kurse-grid { grid-template-columns: 1fr !important; }
-        }
-      `}} />
+    <main style={{ maxWidth: "var(--max-width-narrow)", margin: "0 auto", padding: "var(--space-2xl) var(--space-lg)" }}>
 
-      <div
-        className="auth-grain"
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "#efe6dc",
-          position: "relative",
-          overflow: "hidden",
-          fontFamily: "'Manrope', system-ui, sans-serif",
-        }}
-      >
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }} aria-hidden>
-          <svg style={{ position: "absolute", top: "-15%", left: "-10%", width: "55%", height: "70%", opacity: 0.38 }}
-            viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="250" cy="200" rx="250" ry="180" fill="#e8ddd0"/>
-          </svg>
-          <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "38%", opacity: 0.40 }}
-            viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#e8ddd0" d="M0,60 C360,140 720,20 1080,80 C1260,110 1380,60 1440,70 L1440,160 L0,160 Z"/>
-          </svg>
-          <svg style={{ position: "absolute", top: "5%", right: "-8%", width: "38%", height: "55%", opacity: 0.22 }}
-            viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="200" cy="175" rx="200" ry="155" fill="#ddd4c8"/>
-          </svg>
-        </div>
-
-        <main style={{ position: "relative", zIndex: 1, maxWidth: "880px", margin: "0 auto", padding: "80px 24px 100px" }}>
-
-          {/* Intro */}
-          <div style={{ marginBottom: "56px" }}>
-            <p style={{
-              fontFamily: "'Manrope', system-ui, sans-serif",
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "#b43b32",
-              margin: "0 0 22px",
-              opacity: 0.85,
-            }}>
-              Dein Lernbereich
-            </p>
-            <h1 style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: "52px",
-              fontWeight: 300,
-              lineHeight: 1.1,
-              letterSpacing: "0.01em",
-              color: "#3c2c24",
-              margin: 0,
-            }}>
-              <em style={{ fontStyle: "italic" }}>Meine Kurse</em>
-            </h1>
-            <div style={{ width: "36px", height: "1px", backgroundColor: "#b43b32", margin: "24px 0 22px", opacity: 0.4 }} />
-            <p style={{
-              margin: 0,
-              fontFamily: "'Manrope', system-ui, sans-serif",
-              fontSize: "15px",
-              fontWeight: 400,
-              color: "#7a6d65",
-              lineHeight: 1.75,
-              letterSpacing: "0.01em",
-              maxWidth: "420px",
-            }}>
-              Lerne in deinem eigenen Tempo und entwickle dich weiter.
-            </p>
-          </div>
-
-          {loading ? (
-            <div style={{ color: "#7a6d65", fontSize: "15px" }}>Laden…</div>
-          ) : error ? (
-            <div style={{ padding: "13px 16px", borderRadius: "12px", backgroundColor: "#fce9e9", border: "1px solid rgba(180,59,50,0.12)", color: "#b43b32", fontSize: "14px" }}>
-              {error}
-            </div>
-          ) : courses.length === 0 ? (
-            <div style={{ color: "#7a6d65", fontSize: "15px", lineHeight: 1.75 }}>
-              Keine veröffentlichten Kurse gefunden.
-            </div>
-          ) : (
-            <section
-              className="kurse-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: "20px",
-                alignItems: "stretch",
-              }}
-            >
-              {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  moduleCount={moduleCounts[course.id] ?? null}
-                />
-              ))}
-            </section>
-          )}
-        </main>
+      {/* Page Header */}
+      <div style={{ marginBottom: "var(--space-2xl)" }}>
+        <p style={{ fontSize: "var(--text-overline)", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-primary)", marginBottom: "var(--space-sm)" }}>
+          Dein Lernbereich
+        </p>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h2)", fontWeight: 300, lineHeight: 1.2, color: "var(--color-text)", marginBottom: "var(--space-sm)" }}>
+          Meine <em style={{ fontStyle: "italic" }}>Kurse</em>
+        </h1>
+        <p style={{ fontSize: "var(--text-button)", color: "var(--color-text-secondary)", lineHeight: 1.7 }}>
+          Lerne in deinem eigenen Tempo und entwickle dich weiter.
+        </p>
       </div>
-    </>
+
+      {/* Weitermachen */}
+      {inProgressKurse.length > 0 && (
+        <section style={{ marginBottom: "var(--space-2xl)" }}>
+          <h2 style={{ fontSize: "var(--text-h3)", fontWeight: 500, color: "var(--color-text)", marginBottom: "var(--space-lg)" }}>
+            Weitermachen
+          </h2>
+          <div style={{ display: "flex", gap: "var(--space-md)", overflowX: "auto", paddingBottom: "4px" }}>
+            {inProgressKurse.map((kurs) => {
+              const prozent = Math.round((kurs.erledigt / kurs.gesamt) * 100);
+              return (
+                <div
+                  key={kurs.kurs_id}
+                  style={{
+                    flexShrink: 0,
+                    width: "260px",
+                    backgroundColor: "var(--bg-card)",
+                    borderRadius: "var(--radius-md)",
+                    padding: "var(--space-lg)",
+                    boxShadow: "var(--shadow-card)",
+                    border: "1px solid var(--color-border)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-sm)",
+                  }}
+                >
+                  <p style={{ fontSize: "var(--text-body)", fontWeight: 500, color: "var(--color-text)", margin: 0, lineHeight: 1.3 }}>
+                    {kurs.titel}
+                  </p>
+                  <p style={{ fontSize: "var(--text-caption)", color: "var(--color-text-secondary)", margin: 0 }}>
+                    {kurs.erledigt} von {kurs.gesamt} Modulen · {prozent}%
+                  </p>
+                  {/* Progress Bar */}
+                  <div style={{ height: "6px", borderRadius: "var(--radius-pill)", backgroundColor: "var(--bg-elevated)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${prozent}%`, backgroundColor: "var(--color-primary)", borderRadius: "var(--radius-pill)", transition: "width 0.4s ease" }} />
+                  </div>
+                  <Link
+                    href={`/dashboard/kurse/${kurs.kurs_id}`}
+                    className="btn-primary"
+                    style={{ alignSelf: "flex-start", padding: "8px 20px", fontSize: "var(--text-caption)", marginTop: "var(--space-xs)" }}
+                  >
+                    Weiter →
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Alle Kurse */}
+      <h2 style={{ fontSize: "var(--text-h3)", fontWeight: 500, color: "var(--color-text)", marginBottom: "var(--space-lg)" }}>
+        Alle Kurse
+      </h2>
+
+      {loading ? (
+        <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-button)" }}>Laden…</p>
+      ) : error ? (
+        <Alert variant="error">{error}</Alert>
+      ) : courses.length === 0 ? (
+        <EmptyState title="Noch keine Kurse vorhanden" description="Sobald Kurse veröffentlicht werden, findest du sie hier." />
+      ) : (
+        <section
+          className="kurse-grid"
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "var(--space-lg)", alignItems: "stretch" }}
+        >
+          {courses.map((course) => (
+            <CourseCard key={course.id} course={course} moduleCount={moduleCounts[course.id] ?? null} erledigtCount={erledigtProKurs[course.id] ?? 0} />
+          ))}
+        </section>
+      )}
+    </main>
   );
 }
 
-function CourseCard({
-  course,
-  moduleCount,
-}: Readonly<{ course: CourseRow; moduleCount: number | null }>) {
+function CourseCard({ course, moduleCount, erledigtCount }: Readonly<{ course: CourseRow; moduleCount: number | null; erledigtCount: number }>) {
   const title = course.titel ?? "Unbenannter Kurs";
   const description = course.beschreibung ?? "Keine Beschreibung vorhanden.";
+  const gesamt = moduleCount ?? 0;
+  const prozent = gesamt > 0 ? Math.round((erledigtCount / gesamt) * 100) : 0;
+  const angefangen = erledigtCount > 0 && erledigtCount < gesamt;
+
   const countLabel = useMemo(() => {
     if (moduleCount == null) return "—";
     return String(moduleCount);
@@ -211,23 +260,21 @@ function CourseCard({
   return (
     <Link
       href={`/dashboard/kurse/${course.id}`}
-      className="course-card"
+      className="dash-card"
       style={{
         display: "flex",
         flexDirection: "column",
         textDecoration: "none",
-        backgroundColor: "#fbf8f4",
-        border: "1px solid rgba(60,44,36,0.07)",
-        borderRadius: "28px",
-        padding: "28px 28px 24px",
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-        boxShadow: "0 2px 24px rgba(60,44,36,0.06), 0 1px 3px rgba(60,44,36,0.03)",
-        boxSizing: "border-box",
+        backgroundColor: "var(--bg-card)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-lg)",
+        padding: "var(--space-lg)",
+        boxShadow: "var(--shadow-card)",
         minHeight: "220px",
         height: "100%",
       }}
     >
-      {course.bild_url ? (
+      {course.bild_url && (
         <img
           src={course.bild_url}
           alt=""
@@ -235,44 +282,45 @@ function CourseCard({
             width: "100%",
             height: "130px",
             objectFit: "cover",
-            borderRadius: "16px",
-            border: "1px solid rgba(60,44,36,0.06)",
-            backgroundColor: "#e8ddd0",
-            marginBottom: "20px",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--bg-elevated)",
+            marginBottom: "var(--space-md)",
             flexShrink: 0,
           }}
         />
-      ) : null}
+      )}
 
-      <div
-        className="course-card-title"
-        style={{
-          fontFamily: "'Manrope', system-ui, sans-serif",
-          fontWeight: 600,
-          color: "#3c2c24",
-          fontSize: "16px",
-          marginBottom: "10px",
-          transition: "color 0.2s ease",
-          letterSpacing: "0.01em",
-          lineHeight: 1.3,
-        }}
-      >
+      <div className="dash-card-title" style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "var(--text-body)", marginBottom: "var(--space-sm)", transition: "color 0.2s ease", lineHeight: 1.3 }}>
         {title}
       </div>
 
-      <div style={{ height: "1px", backgroundColor: "rgba(60,44,36,0.06)", marginBottom: "12px" }} />
+      <div style={{ height: "1px", backgroundColor: "var(--color-border)", marginBottom: "var(--space-sm)" }} />
 
-      <div style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#9b8f87", fontSize: "14px", lineHeight: 1.65, flexGrow: 1 }}>
+      <div style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-body-sm)", lineHeight: 1.65, flexGrow: 1 }}>
         {description}
       </div>
 
-      <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#b3a89e", fontSize: "12px", letterSpacing: "0.02em" }}>
+      {erledigtCount > 0 && gesamt > 0 && (
+        <div style={{ marginTop: "var(--space-md)" }}>
+          <div style={{ fontSize: "var(--text-micro)", color: "var(--color-text-secondary)", marginBottom: "var(--space-sm)" }}>
+            {erledigtCount} von {gesamt} {gesamt === 1 ? "Modul" : "Modulen"} abgeschlossen
+          </div>
+          <div style={{ height: "5px", borderRadius: "var(--radius-pill)", backgroundColor: "var(--bg-elevated)", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${prozent}%`, backgroundColor: "var(--color-primary)", borderRadius: "var(--radius-pill)", transition: "width 0.4s ease" }} />
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: "var(--space-md)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ color: "var(--color-text-muted)", fontSize: "var(--text-micro)" }}>
           {countLabel} {moduleCount === 1 ? "Modul" : "Module"}
         </div>
-        <span className="course-card-arrow" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: "13px", color: "#c5b8ae", transition: "color 0.2s ease", opacity: 0.7 }}>
-          Öffnen →
-        </span>
+        {angefangen ? (
+          <span className="dash-card-arrow" style={{ fontSize: "var(--text-caption)", color: "var(--color-primary)", fontWeight: 500 }}>Weitermachen →</span>
+        ) : (
+          <span className="dash-card-arrow" style={{ fontSize: "var(--text-caption)", color: "var(--color-text-muted)", opacity: 0.7 }}>Öffnen →</span>
+        )}
       </div>
     </Link>
   );

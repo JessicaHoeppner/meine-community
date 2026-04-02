@@ -55,73 +55,17 @@ function MitgliederInner() {
   }, [members, query]);
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Manrope:wght@400;500;600&display=swap');
-
-        .member-card:hover {
-          border-color: rgba(180,59,50,0.35) !important;
-          box-shadow: 0 8px 48px rgba(60,44,36,0.11), 0 1px 4px rgba(60,44,36,0.05) !important;
-        }
-        .member-card:hover .member-name { color: #b43b32 !important; }
-        .search-input:focus {
-          outline: none;
-          border-color: #c9896e !important;
-          box-shadow: 0 0 0 3px rgba(180,59,50,0.05) !important;
-        }
-
-        .auth-grain::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          z-index: 0;
-          opacity: 0.016;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-size: 256px 256px;
-        }
-
-        @media (max-width: 640px) {
-          .members-grid { grid-template-columns: 1fr !important; }
-        }
-      `}} />
-
-      <div
-        className="auth-grain"
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "#efe6dc",
-          position: "relative",
-          overflow: "hidden",
-          fontFamily: "'Manrope', system-ui, sans-serif",
-        }}
-      >
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }} aria-hidden>
-          <svg style={{ position: "absolute", top: "-15%", left: "-10%", width: "55%", height: "70%", opacity: 0.38 }}
-            viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="250" cy="200" rx="250" ry="180" fill="#e8ddd0"/>
-          </svg>
-          <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "38%", opacity: 0.40 }}
-            viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#e8ddd0" d="M0,60 C360,140 720,20 1080,80 C1260,110 1380,60 1440,70 L1440,160 L0,160 Z"/>
-          </svg>
-          <svg style={{ position: "absolute", top: "5%", right: "-8%", width: "38%", height: "55%", opacity: 0.22 }}
-            viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="200" cy="175" rx="200" ry="155" fill="#ddd4c8"/>
-          </svg>
-        </div>
-
-        <main style={{ position: "relative", zIndex: 1, maxWidth: "880px", margin: "0 auto", padding: "80px 24px 100px" }}>
+<main style={{ position: "relative", zIndex: 1, maxWidth: "880px", margin: "0 auto", padding: "80px 24px 100px" }}>
 
           {/* Intro */}
           <div style={{ marginBottom: "48px" }}>
             <p style={{
-              fontFamily: "'Manrope', system-ui, sans-serif",
+              fontFamily: "var(--font-body)",
               fontSize: "11px",
               fontWeight: 600,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "#b43b32",
+              color: "var(--color-primary)",
               margin: "0 0 22px",
               opacity: 0.85,
             }}>
@@ -133,15 +77,15 @@ function MitgliederInner() {
               fontWeight: 300,
               lineHeight: 1.1,
               letterSpacing: "0.01em",
-              color: "#3c2c24",
+              color: "var(--color-text)",
               margin: 0,
             }}>
               <em style={{ fontStyle: "italic" }}>Mitglieder</em>
             </h1>
-            <div style={{ width: "36px", height: "1px", backgroundColor: "#b43b32", margin: "22px 0 20px", opacity: 0.4 }} />
+            <div style={{ width: "36px", height: "1px", backgroundColor: "var(--color-primary)", margin: "22px 0 20px", opacity: 0.4 }} />
             <p style={{
               margin: 0,
-              fontFamily: "'Manrope', system-ui, sans-serif",
+              fontFamily: "var(--font-body)",
               fontSize: "15px",
               fontWeight: 400,
               color: "#7a6d65",
@@ -151,6 +95,23 @@ function MitgliederInner() {
             }}>
               Entdecke andere Mitglieder und ihre Profile.
             </p>
+          </div>
+
+          {/* Rangliste Link */}
+          <div style={{ marginBottom: "32px" }}>
+            <a
+              href="/dashboard/mitglieder/rangliste"
+              className="rangliste-link"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: "14px",
+                color: "var(--color-primary)",
+                textDecoration: "none",
+                transition: "opacity 0.15s ease",
+              }}
+            >
+              Rangliste anzeigen →
+            </a>
           </div>
 
           {/* Search */}
@@ -166,11 +127,11 @@ function MitgliederInner() {
                 maxWidth: "380px",
                 padding: "14px 20px",
                 borderRadius: "50px",
-                border: "1px solid #ddd5c6",
+                border: "1px solid var(--color-border-strong)",
                 fontSize: "14px",
-                fontFamily: "'Manrope', system-ui, sans-serif",
-                backgroundColor: "#f7f1e8",
-                color: "#3c2c24",
+                fontFamily: "var(--font-body)",
+                backgroundColor: "var(--bg-primary)",
+                color: "var(--color-text)",
                 boxSizing: "border-box",
                 transition: "border-color 0.2s ease, box-shadow 0.2s ease",
               }}
@@ -180,7 +141,7 @@ function MitgliederInner() {
           {loading ? (
             <div style={{ color: "#7a6d65", fontSize: "15px" }}>Laden…</div>
           ) : error ? (
-            <div style={{ padding: "13px 16px", borderRadius: "12px", backgroundColor: "#fce9e9", border: "1px solid rgba(180,59,50,0.12)", color: "#b43b32", fontSize: "14px" }}>
+            <div style={{ padding: "13px 16px", borderRadius: "12px", backgroundColor: "#fce9e9", border: "1px solid rgba(180,59,50,0.12)", color: "var(--color-primary)", fontSize: "14px" }}>
               {error}
             </div>
           ) : filtered.length === 0 ? (
@@ -201,8 +162,6 @@ function MitgliederInner() {
             </section>
           )}
         </main>
-      </div>
-    </>
   );
 }
 
@@ -251,7 +210,7 @@ function MemberCard({ member }: Readonly<{ member: MemberRow }>) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#b43b32",
+              color: "var(--color-primary)",
               fontFamily: "'Cormorant Garamond', Georgia, serif",
               fontStyle: "italic",
               fontSize: "1.3rem",
@@ -267,9 +226,9 @@ function MemberCard({ member }: Readonly<{ member: MemberRow }>) {
         <div
           className="member-name"
           style={{
-            fontFamily: "'Manrope', system-ui, sans-serif",
+            fontFamily: "var(--font-body)",
             fontWeight: 600,
-            color: "#3c2c24",
+            color: "var(--color-text)",
             fontSize: "15px",
             lineHeight: 1.3,
             transition: "color 0.2s ease",
@@ -284,7 +243,7 @@ function MemberCard({ member }: Readonly<{ member: MemberRow }>) {
 
       <div
         style={{
-          fontFamily: "'Manrope', system-ui, sans-serif",
+          fontFamily: "var(--font-body)",
           color: "#9b8f87",
           fontSize: "13px",
           lineHeight: 1.6,
